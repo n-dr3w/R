@@ -1,0 +1,269 @@
+---
+title: "Projekt zaliczeniowy"
+author: "Aliseiko Andrei"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Dane
+
+
+```{r}
+boston_data <- read.csv("https://www.mimuw.edu.pl/~lrajkowski/wdib-stata/Boston.csv", header=TRUE, sep = ",")
+```
+
+## 1. Ile obserwacji zawiera zbiór danych? Ile zmiennych?
+
+
+```{r , echo=TRUE}
+n_observations <- nrow(boston_data)
+n_variables <- ncol(boston_data)
+
+print(paste("Liczba obserwacji:", n_observations))
+print(paste("Liczba zmiennych:", n_variables))
+```
+
+
+## 2. Jaka jest średnia i wariancja zmiennej TAX? Ile jest równa kowariancja zmiennych TAX oraz MEDV?
+
+
+```{r , echo=TRUE}
+tax_mean <- mean(boston_data$TAX)
+tax_var <- var(boston_data$TAX)
+tax_medv_cov <- cov(boston_data$TAX, boston_data$MEDV)
+
+print(paste("Średnia zmiennej TAX:", tax_mean))
+print(paste("Wariancja zmiennej TAX:", tax_var))
+print(paste("Kowariancja zmiennych TAX i MEDV:", tax_medv_cov))
+
+```
+
+## 3. Oblicz medianę, pierwszy kwartyl i trzeci kwartyl zmiennej PTRATIO?
+
+
+```{r , echo=TRUE}
+ptratio_summary <- summary(boston_data$PTRATIO)
+
+print(paste("Mediana zmiennej PTRATIO:", ptratio_summary[3]))
+print(paste("Pierwszy kwartyl zmiennej PTRATIO:", ptratio_summary[2]))
+print(paste("Trzeci kwartyl zmiennej PTRATIO:", ptratio_summary[4]))
+
+
+```
+
+## 4. Narysuj histogram zmiennej DIS (słupki powinny obejmować przedziały między kolejnymi liczbami naturalnymi). Czy rozsądnie byłoby modelować tę zmienną przy użyciu rozkładu normalnego? Dlaczego?
+
+
+```{r , echo=TRUE}
+hist(boston_data$DIS)
+
+```
+
+Czy rozsądnie byłoby modelować zmienną DIS przy użyciu rozkładu normalnego? W tym celu należałoby sprawdzić, czy dane zmiennej DIS są dobrze skorelowane z rozkładem normalnym. Można to zrobić np. przy użyciu testu Shapiro-Wilka lub testu Q-Q plot. Jeśli testy wykazują, że dane są dobrze skorelowane z rozkładem normalnym, to modelowanie zmiennej DIS przy użyciu rozkładu normalnego jest uzasadnione. Jeśli testy wykazują, że dane nie są dobrze skorelowane z rozkładem normalnym, to lepiej poszukać innego rozkładu, który lepiej opisuje dane.
+
+
+```{r , echo=TRUE}
+
+shapiro_test <- shapiro.test(boston_data$DIS)
+
+if (shapiro_test$p.value > 0.05) {
+  print("Dane są dobrze skorelowane z rozkładem normalnym (p > 0.05).")
+} else {
+  print("Dane nie są dobrze skorelowane z rozkładem normalnym (p <= 0.05).")
+}
+
+```
+
+## 5. Narysuj dystrybuantę empiryczną zmiennej DIS
+
+```{r , echo=TRUE}
+
+library(stats)
+dis_ecdf <- ecdf(boston_data$DIS)
+plot(dis_ecdf)
+
+```
+
+## 6. Narysuj wykres pudełkowy (boxplot) zmiennej AGE. Czy występują jakieś obserwacje odstające?
+
+```{r , echo=TRUE}
+
+boxplot(boston_data$AGE)
+
+```
+   
+ Aby sprawdzić, czy występują jakieś obserwacje odstające, należy zwrócić uwagę na kreski wykresu pudełkowego. Jeśli kreski są dłuższe niż pudełko, to znaczy, że występują jakieś obserwacje odstające. Jeśli kreski są krótsze lub nie występują w ogóle, to znaczy  że brak jest obserwacji odstających.
+
+
+## 7. Zakładając, że zmienna RM stanowi realizację pewnego rozkładu normalnego N(μ,σ2) z nieznanymi parametrami μ i σ2, oblicz estymator największej wiarogodności dla tych dwóch parametrów.
+
+```{r , echo=TRUE}
+
+mean(boston_data$RM)
+var(boston_data$RM)
+
+```
+
+
+eśli zmienna RM stanowi realizację rozkładu normalnego N(μ,σ^2) z nieznanymi parametrami μ i σ^2, to estymatorem największej wiarygodności dla tych parametrów będą odpowiednio:
+estymator średniej (μ̂) - średnia arytmetyczna ze zmiennej RM
+estymator wariancji (σ̂^2) - wariancja ze zmiennej RM
+Estymatory te są największą wiarygodnością w sensie, że są najlepszymi, najmniej skośnymi estymatorami parametrów rozkładu normalnego.
+Aby obliczyć estymatory największej wiarygodności dla zmiennej RM w zbiorze danych opisanym w pliku Boston.csv, można użyć funkcji mean() i var() z pakietu base.
+
+
+
+## 8. Przy założeniach z poprzedniego podpunktu, oblicz przedział ufności dla parametru μ na poziomie 99%.
+
+```{r , echo=TRUE}
+
+rm_mean <- mean(boston_data$RM)
+rm_var <- var(boston_data$RM)
+n <- length(boston_data$RM)
+se <- sqrt(rm_var/n)
+confidence_interval <- c(rm_mean - 2*se, rm_mean + 2*se)
+confidence_interval
+
+```
+
+
+Aby obliczyć przedział ufności dla parametru μ z założeniem, że zmienna RM stanowi realizację rozkładu normalnego N(μ,σ^2) z nieznanymi parametrami μ i σ^2, należy wykonać następujące kroki:
+
+Obliczyć estymator największej wiarygodności dla parametru μ, tj. średnią arytmetyczną ze zmiennej RM (μ).
+Obliczyć estymator największej wiarygodności dla parametru σ^2, tj. wariancję ze zmiennej RM (σ̂^2).
+Obliczyć odchylenie standardowe estymatora średniej (SE), które jest równe sqrt(σ̂^2/n), gdzie n to liczba obserwacji w zbiorze danych.
+Obliczyć przedział ufności dla parametru μ na poziomie 99%. Przedział ufności jest obliczany jako (μ - 2SE, μ + 2SE). W przypadku, gdy chcemy obliczyć przedział ufności dla parametru μ na innym poziomie ufności, należy zamienić liczbę 2 na inną liczbę odpowiadającą poziomowi ufności.
+
+
+
+## 9. Narysuj obok siebie dwa wykresy pudełkowe zmiennej MEDV: jeden dla obszarów graniczących z Charles River, a drugi dla pozostałych. Na tej podstawie oceń, jak sąsiedztwo rzeki wpływa na cenę mieszkań.
+
+```{r , echo=TRUE}
+
+par(mfrow = c(1, 2))
+boxplot(MEDV ~ CHAS, data = boston_data, main = "Dostęp do Charles River")
+
+```
+
+Na podstawie wykresów pudełkowych można zauważyć, że cena mieszkań w obszarach graniczących z rzeką jest wyższa niż w pozostałych obszarach. 
+
+
+## 10. Przetestuj hipotezę o równości średnich zmiennej MEDV dla obszarów graniczących z Charles River i pozostałych na poziomie istotności 1% (przyjmij obustronną hipotezę alternatywną). Podaj p-wartość.
+
+
+```{r , echo=TRUE}
+
+
+medv_border <- boston_data[boston_data$CHAS==1,]$MEDV
+medv_nonborder <- boston_data[boston_data$CHAS==0,]$MEDV
+
+
+result <- t.test(medv_border, medv_nonborder, alternative = "two.sided", conf.level = 0.99)
+
+result
+
+result$p.value
+
+```
+
+
+## 11. Zbadaj normalność zmiennej AGE przy pomocy wykresu kwantylowego oraz testu Shapiro-Wilka. Czy rozsądnie byłoby założyć o tej zmiennej, że ma rozkład normalny?
+
+```{r , echo=TRUE}
+
+shapiro_test <- shapiro.test(boston_data$AGE)
+
+shapiro_test
+shapiro_test$p.value
+
+library(ggplot2)
+ggplot(boston_data, aes(sample = AGE)) + stat_qq() + stat_qq_line()
+```
+
+
+P-wartość z testu Shapiro-Wilka mówi o tym, że można odrzucić hipotezę o normalności rozkładu zmiennej AGE. 
+
+
+
+## 12. Narysuj na wykresie punktowym zmienne MEDV i RM. Wykonaj regresję liniową MEDV względem RM (z wyrazem wolnym); jakie jest równanie najlepiej dopasowanej prostej? Przedstaw tę prostą na wcześniejszym wykresie punktowym.
+
+```{r , echo=TRUE}
+
+
+library(ggplot2)
+
+# wykres punktowy
+ggplot(data = boston_data, aes(x = RM, y = MEDV)) +
+  geom_point()
+
+# regresja liniowa
+model <- lm(MEDV ~ RM + 0, data = boston_data)
+summary(model)
+# Dodanie linii regresji do wykresu punktowego
+ggplot(data = boston_data, aes(x = RM, y = MEDV)) +
+  geom_point() +
+  geom_line(aes(x = RM, y = predict(model)))
+
+
+```
+
+
+## 13. Wykonaj regresję liniową zmiennej MEDV względem wszytkich postałych zmiennych znajdujących się w zbiorze danych Boston. Przy których zmiennych znajduje się ujemny współczynnik? Czy jest to zgodne z intuicją?
+
+
+```{r , echo=TRUE}
+
+
+model <- lm(MEDV ~ ., data = boston_data)
+
+coefficients <- coef(model)
+
+coefficients
+
+negative_coefficients <- coefficients[coefficients < 0]
+negative_coefficients
+
+```
+
+## 14. Skonstruuj zmienną pomocniczą RM_cat, która przyjmuje wartość “low” jeśli średnia liczba pokojów w danym regionie jest mniejsza od 5.8, “high” jeśli jest większa od 6.6 oraz “medium” w przeciwnym przypadku. Podobnie, skonstruuj zmienną pomocniczą AGE_cat, przyjmującą wartości “low”, “high” i “medium” gdy zmienna AGE jest odpowiednio mniejsza od 45, większa od 95 i między 45 a 95. Przy użyciu funkcji table() przedstaw te dwie zmienne pomocnicze w ramach jednej tabelki. Za pomocą testu χ2 zbadaj niezależność zmiennych RM_cat i AGE_cat na poziomie istotności 1%. Uwaga. W konstrukcji zmiennych pomocniczych przydatna może okazać się funkcja cut().
+
+```{r , echo=TRUE}
+
+# Create RM_cat variable
+boston_data$RM_cat <- cut(boston_data$RM, breaks = c(min(boston_data$RM), 5.8, 6.6, max(boston_data$RM)), labels = c("low", "medium", "high"))
+
+# Create AGE_cat variable
+boston_data$AGE_cat <- cut(boston_data$AGE, breaks = c(min(boston_data$AGE), 45, 95, max(boston_data$AGE)), labels = c("low", "medium", "high"))
+
+# Present the two variables in a table
+table(boston_data$RM_cat, boston_data$AGE_cat)
+
+# Perform chi-squared test for independence
+chisq.test(boston_data$RM_cat, boston_data$AGE_cat)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
